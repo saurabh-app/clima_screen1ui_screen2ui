@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clima_screen1ui_screen2ui/screens/Screen2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -12,24 +13,24 @@ class Screen1 extends StatefulWidget {
 }
 
 class _Screen1State extends State<Screen1> {
-    var apiKey = "f2ba5b65a489fd4cdd5d0a352284a03b";
-    var cityName;
-    var currentWeather;
-    var tempInCel;
-    var emoji = '';
+  var apiKey = "f2ba5b65a489fd4cdd5d0a352284a03b";
+  var cityName;
+  var currentWeather;
+  var tempInCel;
+  var emoji = '';
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  if (widget.weatherdata != null) {
-    print(widget.weatherdata['name']);
-    UpdateUI(widget.weatherdata);
-  } else {
-    print("Weather data is null");
-    UpdateUI(null); 
+    if (widget.weatherdata != null) {
+      print(widget.weatherdata['name']);
+      UpdateUI(widget.weatherdata);
+    } else {
+      print("Weather data is null");
+      UpdateUI(null);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +47,10 @@ void initState() {
           ),
         ),
 
-        child: SafeArea(child: Column(
-          children: [
-
-             Row(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
@@ -62,10 +63,20 @@ void initState() {
                       size: 30,
                     ),
                   ),
-                  const SizedBox(width: 10,),
+                  const SizedBox(width: 10),
                   IconButton(
-                    onPressed: () {
-                      print("Pressed");
+                    onPressed: ()  async{
+                      var cityName = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => Screen2()),
+                      );
+                      print(cityName);
+                      if(cityName!=Null || cityName !=""){
+                        var weatherdata = getWeatherDataFromCityName(cityName );
+                        setState(() {
+                          UpdateUI(widget.weatherdata);
+                        });
+                      }
                     },
                     icon: const Icon(
                       Icons.location_on,
@@ -75,7 +86,7 @@ void initState() {
                   ),
                 ],
               ),
-               const Text(
+              const Text(
                 "San Fansisco",
                 style: TextStyle(
                   color: Colors.white,
@@ -91,28 +102,20 @@ void initState() {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-               Center(
-                 child: Row(
+              Center(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "$emoji",
-                      style: TextStyle(
-                        fontSize: 70,
-                      ),
-                    ),
+                    Text("$emoji", style: TextStyle(fontSize: 70)),
                     Text(
                       currentWeather,
-                      style: TextStyle(
-                        fontSize: 50,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 50, color: Colors.white),
                     ),
                   ],
-                               ),
-               ),
-          ]
-        )
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -175,72 +178,74 @@ void initState() {
   //    currentWeather=weatherData['weather'][0]['name'];
   //    cityName=weatherData['name'];
   //    });
-      
+
   // }
 
   String kelvinToCel(var temp) {
-  var tempInCel = temp - 273.15;
-  return tempInCel.toStringAsFixed(2);  // Return the temperature in Celsius, 2 decimal places
-}
-
-void getWeatherDataFromCityName(String cityName) async {
-  var url = Uri.https('api.openweathermap.org', 'data/2.5/weather', {
-    'q': cityName,
-    'appid': apiKey,
-  });
-  print(url);
-
-  try {
-    var response = await http.get(url);
-    if (response.statusCode == 200) {
-      var data = response.body;
-      var weatherData = jsonDecode(data);
-      print(weatherData);
-      UpdateUI(weatherData);
-    } else {
-      // Handle error if response is not 200 OK
-      print('Failed to load weather data');
-    }
-  } catch (e) {
-    print('Error fetching weather data: $e');
-  }
-}
-
-void UpdateUI(var weatherData) {
-  if (weatherData == null) {
-    print("Weather data is null");
-    return;
+    var tempInCel = temp - 273.15;
+    return tempInCel.toStringAsFixed(
+      2,
+    ); // Return the temperature in Celsius, 2 decimal places
   }
 
-  try {
-    var weatherId = weatherData['weather'][0]['id'];
-    String emoji = '';
-    if (weatherId >= 200 && weatherId < 300) {
-      emoji = "⛈️";
-    } else if (weatherId >= 300 && weatherId < 400) {
-      emoji = "🌦️";
-    } else if (weatherId >= 500 && weatherId < 600) {
-      emoji = "🌧️";
-    } else if (weatherId >= 600 && weatherId < 700) {
-      emoji = "❄️";
-    } else if (weatherId >= 700 && weatherId < 800) {
-      emoji = "🌫️";  // Changed to fog emoji for better representation
-    } else if (weatherId == 800) {
-      emoji = "☀️";  // Clear weather
-    } else if (weatherId > 800) {
-      emoji = "☁️";  // Clouds
-    }
-
-    setState(() {
-      var temp = weatherData['main']['temp'];
-      tempInCel = kelvinToCel(temp);
-      currentWeather = weatherData['weather'][0]['description'];  // Corrected to 'description'
-      cityName = weatherData['name'];
-      var emojiSymbol = emoji;  // Store the emoji based on weather id
+  void getWeatherDataFromCityName(String cityName) async {
+    var url = Uri.https('api.openweathermap.org', 'data/2.5/weather', {
+      'q': cityName,
+      'appid': apiKey,
     });
-  } catch (e) {
-    print("Error in UpdateUI: $e");
-  }
-}
+    print(url);
 
+    try {
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        var data = response.body;
+        var weatherData = jsonDecode(data);
+        print(weatherData);
+        UpdateUI(weatherData);
+      } else {
+        // Handle error if response is not 200 OK
+        print('Failed to load weather data');
+      }
+    } catch (e) {
+      print('Error fetching weather data: $e');
+    }
+  }
+
+  void UpdateUI(var weatherData) {
+    if (weatherData == null) {
+      print("Weather data is null");
+      return;
+    }
+
+    try {
+      var weatherId = weatherData['weather'][0]['id'];
+      String emoji = '';
+      if (weatherId >= 200 && weatherId < 300) {
+        emoji = "⛈️";
+      } else if (weatherId >= 300 && weatherId < 400) {
+        emoji = "🌦️";
+      } else if (weatherId >= 500 && weatherId < 600) {
+        emoji = "🌧️";
+      } else if (weatherId >= 600 && weatherId < 700) {
+        emoji = "❄️";
+      } else if (weatherId >= 700 && weatherId < 800) {
+        emoji = "🌫️"; // Changed to fog emoji for better representation
+      } else if (weatherId == 800) {
+        emoji = "☀️"; // Clear weather
+      } else if (weatherId > 800) {
+        emoji = "☁️"; // Clouds
+      }
+
+      setState(() {
+        var temp = weatherData['main']['temp'];
+        tempInCel = kelvinToCel(temp);
+        currentWeather =
+            weatherData['weather'][0]['description']; // Corrected to 'description'
+        cityName = weatherData['name'];
+        var emojiSymbol = emoji; // Store the emoji based on weather id
+      });
+    } catch (e) {
+      print("Error in UpdateUI: $e");
+    }
+  }
 }
