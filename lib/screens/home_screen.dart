@@ -41,7 +41,11 @@ if(mounted){
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       print(data);
-      Navigator.push(context, MaterialPageRoute(builder: (_)=>Screen1() ));
+     Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => Screen1(weatherdata: data),
+    ),);
     }
   }
 
